@@ -1,313 +1,700 @@
-const titleScreen = document.getElementById("titleScreen");
-const gameScreen = document.getElementById("gameScreen");
-const resultScreen = document.getElementById("resultScreen");
+'use strict';
 
-const titleImage = document.getElementById("titleImage");
-const startBtn = document.getElementById("startBtn");
-const retryBtn = document.getElementById("retryBtn");
-const toTitleBtn = document.getElementById("toTitleBtn");
-const homeBtn = document.getElementById("homeBtn");
-const shareBtn = document.getElementById("shareBtn");
+const GAME_TIME = 60;
 
-const scoreEl = document.getElementById("score");
-const timeEl = document.getElementById("time");
+const LANES = ['←','↓','↑','→'];
 
-const rankText = document.getElementById("rankText");
-const resultImage = document.getElementById("resultImage");
-const scoreResult = document.getElementById("scoreResult");
-const commentText = document.getElementById("commentText");
+const dancerImg = new Image();
+dancerImg.src = 'dance.png';
 
-const canvas = document.getElementById("gameCanvas");
-const ctx = canvas.getContext("2d");
+const bgm = new Audio('bgm.mp3');
+bgm.loop = false;
+bgm.volume = 0.75;
 
-const bgImg = new Image();
-bgImg.src = "back.png";
+const seGood = new Audio('se_good.mp3');
+seGood.volume = 0.28;
 
-const ufoImg = new Image();
-ufoImg.src = "ufo.png";
+const seBad = new Audio('se_bad.mp3');
+seBad.volume = 0.18;
 
-const hatImg = new Image();
-hatImg.src = "hat.png";
+const titleScreen = document.getElementById('titleScreen');
+const gameScreen = document.getElementById('gameScreen');
+const resultScreen = document.getElementById('resultScreen');
 
-const melonImg = new Image();
-melonImg.src = "melon.png";
+const startBtn = document.getElementById('startBtn');
+const titleImage = document.getElementById('titleImage');
 
-const bgm = new Audio("bgm.mp3");
-bgm.loop = true;
-bgm.volume = 0.45;
+const retryBtn = document.getElementById('retryBtn');
+const homeBtn = document.getElementById('homeBtn');
+const shareBtn = document.getElementById('shareBtn');
+const backBtn = document.getElementById('backBtn');
 
-const seGood = new Audio("se_good.mp3");
-seGood.volume = 0.25;
+const scoreEl = document.getElementById('score');
+const comboEl = document.getElementById('combo');
+const timeLeftEl = document.getElementById('timeLeft');
 
-const seBad = new Audio("se_bad.mp3");
-seBad.volume = 0.25;
+const finalScoreEl = document.getElementById('finalScore');
+const rankTextEl = document.getElementById('rankText');
+const rankStarsEl = document.getElementById('rankStars');
 
-const melonSe = new Audio("melon.mp3");
-melonSe.volume = 0.35;
+const judgeTextEl = document.getElementById('judgeText');
+const danceTimeEl = document.getElementById('danceTime');
 
-let W;
-let H;
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+
+const resultCanvas = document.getElementById('resultCanvas');
+const resultCtx = resultCanvas.getContext('2d');
+
+let notes = [];
 
 let score = 0;
-let time = 30;
-let running = false;
-let objects = [];
+let combo = 0;
 
-let timerId = null;
-let spawnId = null;
+let running = false;
+
+let startTime = 0;
+let lastTime = 0;
+
 let animationId = null;
 
-function resize(){
-  W = canvas.width = window.innerWidth;
-  H = canvas.height = window.innerHeight;
+let nextSpawn = 0;
+
+let judgeTimer = null;
+
+function resizeCanvas(){
+
+  const rect = canvas.getBoundingClientRect();
+
+  canvas.width = Math.floor(rect.width);
+  canvas.height = Math.floor(rect.height);
 }
 
-resize();
-window.addEventListener("resize", resize);
+window.addEventListener('resize', resizeCanvas);
 
 function showScreen(screen){
-  titleScreen.classList.remove("active");
-  gameScreen.classList.remove("active");
-  resultScreen.classList.remove("active");
-  screen.classList.add("active");
+
+  [titleScreen, gameScreen, resultScreen]
+  .forEach(s => s.classList.remove('active'));
+
+  screen.classList.add('active');
 }
 
-function stopGame(){
-  running = false;
-  clearInterval(timerId);
-  clearInterval(spawnId);
-  cancelAnimationFrame(animationId);
-  bgm.pause();
+function isDanceTime(sec){
+
+  return sec >= 30 && sec <= 50;
 }
 
 function startGame(){
-  resize();
-
-  score = 0;
-  time = 30;
-  objects = [];
-  running = true;
-
-  scoreEl.textContent = score;
-  timeEl.textContent = time;
 
   showScreen(gameScreen);
 
+  resizeCanvas();
+
+  notes = [];
+
+  score = 0;
+  combo = 0;
+
+  scoreEl.textContent = 0;
+  comboEl.textContent = 0;
+
+  judgeTextEl.textContent = '';
+
+  startTime = performance.now();
+  lastTime = startTime;
+
+  nextSpawn = 0;
+
+  running = true;
+
+  bgm.pause();
   bgm.currentTime = 0;
-  bgm.play().catch(()=>{});
+  bgm.play().catch(() => {});
 
-  clearInterval(timerId);
-  clearInterval(spawnId);
-  cancelAnimationFrame(animationId);
-
-  spawnObject();
-  spawnObject();
-
-  timerId = setInterval(()=>{
-    time--;
-    timeEl.textContent = time;
-
-    if(time <= 0){
-      endGame();
-    }
-  },1000);
-
-  spawnId = setInterval(spawnObject, 500);
-
-  gameLoop();
+  loop(startTime);
 }
-
-function spawnObject(){
-  if(!running) return;
-
-  const rand = Math.random();
-  let type = "ufo";
-
-  if(rand < 0.20){
-    type = "melon";
-  }else if(rand < 0.45){
-    type = "hat";
-  }
-
-  const fromLeft = Math.random() < 0.5;
-  const baseY = 90 + Math.random() * (H * 0.56);
-
-  objects.push({
-    type,
-    x: fromLeft ? -80 : W + 80,
-    y: baseY,
-    baseY,
-    size: 76,
-    vx: fromLeft ? 2.2 + Math.random() * 3 : -2.2 - Math.random() * 3,
-    wave: 15 + Math.random() * 45,
-    angle: Math.random() * 999
-  });
-}
-
-function gameLoop(){
-  if(!running) return;
-
-  ctx.clearRect(0,0,W,H);
-
-  if(bgImg.complete){
-    ctx.drawImage(bgImg,0,0,W,H);
-  }else{
-    ctx.fillStyle = "#1b1038";
-    ctx.fillRect(0,0,W,H);
-  }
-
-  for(const obj of objects){
-    obj.x += obj.vx;
-    obj.angle += 0.05;
-    obj.y = obj.baseY + Math.sin(obj.angle) * obj.wave;
-
-    let img = ufoImg;
-    if(obj.type === "hat") img = hatImg;
-    if(obj.type === "melon") img = melonImg;
-
-    if(img.complete){
-      ctx.drawImage(
-        img,
-        obj.x - obj.size / 2,
-        obj.y - obj.size / 2,
-        obj.size,
-        obj.size
-      );
-    }
-  }
-
-  objects = objects.filter(obj => obj.x > -120 && obj.x < W + 120);
-
-  animationId = requestAnimationFrame(gameLoop);
-}
-
-canvas.addEventListener("pointerdown", e=>{
-  if(!running) return;
-
-  const rect = canvas.getBoundingClientRect();
-  const mx = e.clientX - rect.left;
-  const my = e.clientY - rect.top;
-
-  for(let i=objects.length-1; i>=0; i--){
-    const obj = objects[i];
-
-    const dx = mx - obj.x;
-    const dy = my - obj.y;
-    const dist = Math.sqrt(dx * dx + dy * dy);
-
-    if(dist < obj.size * 0.5){
-if(obj.type === "ufo"){
-
-  score += 3;
-
-  seGood.currentTime = 0;
-  seGood.play().catch(()=>{});
-
-}else if(obj.type === "melon"){
-
-  score -= 1;
-
-  seBad.currentTime = 0;
-  seBad.play().catch(()=>{});
-
-  melonSe.currentTime = 0;
-  melonSe.play().catch(()=>{});
-
-}else{
-
-  score -= 1;
-
-  seBad.currentTime = 0;
-  seBad.play().catch(()=>{});
-
-}
-
-      scoreEl.textContent = score;
-      objects.splice(i,1);
-      break;
-    }
-  }
-});
 
 function endGame(){
-  stopGame();
 
-  let rank;
-  let comment;
-  let image;
+  running = false;
 
-  if(score >= 25){
-    rank = "もう隠せない";
-    comment = "もう、見間違いでは済まされない。";
-    image = "ufo.png";
-  }else if(score >= 10){
-    rank = "たしかに見た";
-    comment = "夕暮れの空に、何かが飛んでいた。";
-    image = "hat.png";
-  }else{
-    rank = "気のせいだった";
-    comment = "帽子やメロンパンばかり追っていた。";
-    image = "melon.png";
+  cancelAnimationFrame(animationId);
+
+  bgm.pause();
+  bgm.currentTime = 0;
+
+  danceTimeEl.classList.remove('active');
+
+  document.body.classList.remove('danceFlash');
+
+  finalScoreEl.textContent = score;
+
+  let rank = 'イギーなダンス';
+  let stars = '★☆☆';
+  let frame = 0;
+
+  if(score >= 40){
+
+    rank = 'イビツなダンス';
+    stars = '★★★';
+    frame = 8;
+
+  }else if(score >= 20){
+
+    rank = 'イキなダンス';
+    stars = '★★☆';
+    frame = 4;
   }
 
-  rankText.textContent = rank;
-  scoreResult.textContent = `SCORE ${score}`;
-  commentText.textContent = comment;
-  resultImage.src = image;
+  rankTextEl.textContent = rank;
+  rankStarsEl.textContent = stars;
+
+  drawResultFrame(frame);
 
   showScreen(resultScreen);
 }
 
-titleImage.addEventListener("click", startGame);
-startBtn.addEventListener("click", startGame);
+function drawResultFrame(frame){
 
-retryBtn.addEventListener("click", ()=>{
-  stopGame();
-  showScreen(titleScreen);
-});
+  if(!dancerImg.complete) return;
 
-toTitleBtn.addEventListener("click", ()=>{
-  stopGame();
-  showScreen(titleScreen);
-});
+  const sw = dancerImg.width / 3;
+  const sh = dancerImg.height / 3;
 
-homeBtn.addEventListener("click", ()=>{
-  location.href = "https://afoolhippo.github.io/home/?skipTitle=1";
-});
+  const sx = (frame % 3) * sw;
+  const sy = Math.floor(frame / 3) * sh;
 
-shareBtn.addEventListener("click", ()=>{
-  let icon = "🍈";
-  let rank = "気のせいだった";
-  let text = "メロンパンばかり見ていた。";
+  resultCanvas.width = 160;
+  resultCanvas.height = 160;
 
-  if(score >= 25){
-    icon = "🛸";
-    rank = "もう隠せない";
-    text = "夕暮れの空を見続けた。";
-  }else if(score >= 10){
-    icon = "🎩";
-    rank = "たしかに見た";
-    text = "夕暮れの空に、何かが飛んでいた。";
+  resultCtx.imageSmoothingEnabled = false;
+
+  resultCtx.clearRect(0,0,160,160);
+
+  resultCtx.drawImage(
+    dancerImg,
+    sx,
+    sy,
+    sw,
+    sh,
+    0,
+    0,
+    160,
+    160
+  );
+}
+
+function spawnNote(sec){
+
+  notes.push({
+
+    lane: Math.floor(Math.random() * 4),
+
+    y: -60,
+
+    speed: 130,
+
+    dance: isDanceTime(sec),
+
+    hit: false,
+    miss: false
+  });
+}
+
+function getJudgeY(){
+
+  return canvas.height - 90;
+}
+
+function updateNotes(dt, sec){
+
+  if(sec >= nextSpawn){
+
+    spawnNote(sec);
+
+    nextSpawn = sec + (
+
+      isDanceTime(sec)
+
+      ? 0.65 + Math.random() * 0.2
+
+      : 1.15 + Math.random() * 0.45
+    );
   }
 
-  const shareText =
-`${icon} UFOを見た！
+  const judgeY = getJudgeY();
 
-「${rank}」
+  notes.forEach(note => {
+
+    note.y += note.speed * dt;
+
+    if(
+      !note.hit &&
+      !note.miss &&
+      note.y > judgeY + 72
+    ){
+
+      note.miss = true;
+
+      combo = 0;
+
+      comboEl.textContent = combo;
+
+      playBad();
+
+      showJudge('MISS');
+    }
+  });
+
+  notes = notes.filter(note => {
+
+    return note.y < canvas.height + 100 && !note.hit;
+  });
+}
+
+function drawBackground(dance){
+
+  ctx.fillStyle = '#ffffff';
+
+  ctx.fillRect(
+    0,
+    0,
+    canvas.width,
+    canvas.height
+  );
+
+  ctx.fillStyle = dance
+
+    ? 'rgba(91,42,160,.14)'
+
+    : 'rgba(91,42,160,.06)';
+
+  for(let y = 0; y < canvas.height; y += 16){
+
+    for(let x = 0; x < canvas.width; x += 16){
+
+      ctx.fillRect(x,y,2,2);
+    }
+  }
+}
+
+function drawDancer(sec){
+
+  if(!dancerImg.complete) return;
+
+  const dance = isDanceTime(sec);
+
+  const fps = dance ? 14 : 6;
+
+  const frame =
+    Math.floor(sec * fps) % 9;
+
+  const sw = dancerImg.width / 3;
+  const sh = dancerImg.height / 3;
+
+  const sx = (frame % 3) * sw;
+  const sy = Math.floor(frame / 3) * sh;
+
+  const size = Math.min(
+    canvas.width * 0.58,
+    canvas.height * 0.38
+  );
+
+  let dx = canvas.width / 2 - size / 2;
+
+  if(dance){
+
+    dx += Math.sin(sec * 18) * 12;
+  }
+
+  const dy =
+    canvas.height * 0.48 - size / 2;
+
+  ctx.save();
+
+  ctx.globalAlpha = dance ? 0.24 : 0.18;
+
+  ctx.imageSmoothingEnabled = false;
+
+  ctx.drawImage(
+    dancerImg,
+    sx,
+    sy,
+    sw,
+    sh,
+    dx,
+    dy,
+    size,
+    size
+  );
+
+  ctx.restore();
+}
+
+function drawLanes(){
+
+  const laneW = canvas.width / 4;
+
+  for(let i = 0; i < 4; i++){
+
+    const x = i * laneW;
+
+    ctx.strokeStyle = '#d8c1ff';
+
+    ctx.lineWidth = 2;
+
+    ctx.strokeRect(
+      x,
+      0,
+      laneW,
+      canvas.height
+    );
+  }
+}
+
+function drawJudgeLine(){
+
+  const y = getJudgeY();
+
+  ctx.fillStyle = '#5b2aa0';
+
+  ctx.fillRect(
+    0,
+    y - 4,
+    canvas.width,
+    8
+  );
+}
+
+function drawNotes(sec){
+
+  const laneW = canvas.width / 4;
+  const judgeY = getJudgeY();
+
+  notes.forEach(note => {
+
+    let x =
+      note.lane * laneW +
+      laneW / 2;
+
+    if(note.dance){
+
+      x += Math.sin(
+        note.y * 0.02 + sec * 8
+      ) * 80;
+    }
+
+    const y = note.y;
+
+    const dist =
+      Math.abs(y - judgeY);
+
+    const isTiming =
+      dist <= 72;
+
+    const blinkOn =
+      Math.floor(sec * 12) % 2 === 0;
+
+    if(isTiming && blinkOn){
+
+      ctx.fillStyle = '#ff4fd8';
+
+    }else{
+
+      ctx.fillStyle = '#5b2aa0';
+    }
+
+    ctx.fillRect(
+      x - 30,
+      y - 30,
+      60,
+      60
+    );
+
+    ctx.strokeStyle = isTiming
+      ? '#ff4fd8'
+      : '#ffffff';
+
+    ctx.lineWidth = isTiming ? 5 : 4;
+
+    ctx.strokeRect(
+      x - 30,
+      y - 30,
+      60,
+      60
+    );
+
+    ctx.fillStyle = '#ffffff';
+
+    ctx.font = 'bold 42px sans-serif';
+
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+
+    ctx.fillText(
+      LANES[note.lane],
+      x,
+      y + 1
+    );
+  });
+}
+
+function draw(sec){
+
+  const dance = isDanceTime(sec);
+
+  drawBackground(dance);
+
+  drawDancer(sec);
+
+  drawLanes();
+
+  drawJudgeLine();
+
+  drawNotes(sec);
+}
+
+function playGood(){
+
+  seGood.currentTime = 0;
+
+  seGood.play();
+}
+
+function playBad(){
+
+  seBad.currentTime = 0;
+
+  seBad.play();
+}
+
+function handleInput(lane){
+
+  if(!running) return;
+
+  const judgeY = getJudgeY();
+
+  let best = null;
+
+  let bestDist = 9999;
+
+  notes.forEach(note => {
+
+    if(note.lane !== lane) return;
+
+    if(note.hit || note.miss) return;
+
+    const dist =
+      Math.abs(note.y - judgeY);
+
+    if(dist < bestDist){
+
+      bestDist = dist;
+
+      best = note;
+    }
+  });
+
+  if(best && bestDist <= 72){
+
+    best.hit = true;
+
+    combo++;
+
+    let add = 1;
+
+    if(bestDist <= 28){
+
+      add = 3;
+
+      showJudge('GOOD');
+
+    }else{
+
+      showJudge('OK');
+    }
+
+    playGood();
+
+    score += add;
+
+    scoreEl.textContent = score;
+
+    comboEl.textContent = combo;
+
+  }else{
+
+    combo = 0;
+
+    comboEl.textContent = combo;
+
+    playBad();
+
+    showJudge('MISS');
+  }
+}
+
+function showJudge(text){
+
+  judgeTextEl.textContent = text;
+
+  clearTimeout(judgeTimer);
+
+  judgeTimer = setTimeout(() => {
+
+    judgeTextEl.textContent = '';
+
+  },300);
+}
+
+function loop(now){
+
+  if(!running) return;
+
+  const dt = Math.min(
+    (now - lastTime) / 1000,
+    0.05
+  );
+
+  lastTime = now;
+
+  const sec =
+    (now - startTime) / 1000;
+
+  const remain = Math.max(
+    0,
+    Math.ceil(GAME_TIME - sec)
+  );
+
+  timeLeftEl.textContent = remain;
+
+  const dance = isDanceTime(sec);
+
+  danceTimeEl.classList.toggle(
+    'active',
+    dance
+  );
+
+  document.body.classList.toggle(
+    'danceFlash',
+    dance
+  );
+
+  updateNotes(dt, sec);
+
+  draw(sec);
+
+  if(sec >= GAME_TIME){
+
+    endGame();
+
+    return;
+  }
+
+  animationId =
+    requestAnimationFrame(loop);
+}
+
+startBtn.addEventListener(
+  'click',
+  startGame
+);
+
+titleImage.addEventListener(
+  'click',
+  startGame
+);
+
+retryBtn.addEventListener(
+  'click',
+  () => {
+
+    showScreen(titleScreen);
+  }
+);
+
+backBtn.addEventListener(
+  'click',
+  () => {
+
+    running = false;
+
+    cancelAnimationFrame(animationId);
+
+    bgm.pause();
+    bgm.currentTime = 0;
+
+    showScreen(titleScreen);
+  }
+);
+
+homeBtn.addEventListener(
+  'click',
+  () => {
+
+    location.href =
+    'https://afoolhippo.github.io/home/?skipTitle=1';
+  }
+);
+
+shareBtn.addEventListener(
+  'click',
+  () => {
+
+    const text =
+`「${rankTextEl.textContent}」だった。🕺
 
 SCORE ${score}
 
-${text}
-
 無料ブラウザゲーム
-「UFOを見た！」
-https://afoolhippo.github.io/game21/
+「歪なダンス」
 
-#UFOを見た
+https://afoolhippo.github.io/game20/
+
+#歪なダンス
 #カバゲーセン`;
 
-  window.open(
-    "https://twitter.com/intent/tweet?text=" + encodeURIComponent(shareText),
-    "_blank"
+    window.open(
+      'https://twitter.com/intent/tweet?text='
+      + encodeURIComponent(text),
+      '_blank'
+    );
+  }
+);
+
+document
+.querySelectorAll('.tapBtn')
+.forEach(btn => {
+
+  btn.addEventListener(
+    'pointerdown',
+    e => {
+
+      e.preventDefault();
+
+      handleInput(
+        Number(btn.dataset.lane)
+      );
+    }
   );
 });
+
+window.addEventListener(
+  'keydown',
+  e => {
+
+    const map = {
+
+      ArrowLeft:0,
+      ArrowDown:1,
+      ArrowUp:2,
+      ArrowRight:3
+    };
+
+    if(map[e.key] !== undefined){
+
+      handleInput(map[e.key]);
+    }
+  }
+);
