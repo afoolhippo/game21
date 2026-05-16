@@ -2,129 +2,53 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover">
-  <title>歪なダンス</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>UFOを見た！</title>
 
   <link rel="stylesheet" href="style.css">
 
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DotGothic16&display=swap" rel="stylesheet">
 </head>
+
 <body>
 
-<div id="app">
+<div id="titleScreen" class="screen active">
+  <img id="titleImage" src="title.png">
 
-  <!-- タイトル -->
+  <div id="ruleText">
+    UFOをタップ！<br>
+    帽子とメロンパンはタップするな！
+  </div>
 
-  <section id="titleScreen" class="screen active">
+  <button id="startBtn">タップしてスタート</button>
+</div>
 
-    <img
-      src="title.png"
-      id="titleImage"
-      alt="歪なダンス"
-    >
+<div id="gameScreen" class="screen">
+  <canvas id="gameCanvas"></canvas>
 
-    <div class="titleRule">
-      落ちてくる矢印を<br>
-      タイミングよく押せ。<br>
-      サビは歪み始める。
-    </div>
+  <div id="ui">
+    <span>SCORE <span id="score">0</span></span>
+    <span>TIME <span id="time">30</span></span>
+  </div>
 
-    <button id="startBtn">
-      タップしてスタート
-    </button>
+  <button id="toTitleBtn">タイトルへ</button>
+</div>
 
-  </section>
+<div id="resultScreen" class="screen">
+  <div id="rankText"></div>
+  <img id="resultImage">
+  <div id="scoreResult"></div>
+  <div id="commentText"></div>
 
-  <!-- ゲーム -->
-
-  <section id="gameScreen" class="screen">
-
-    <button id="backBtn">
-      タイトルへ
-    </button>
-
-    <div class="hud">
-
-      <div class="hudItem">
-        SCORE
-        <span id="score">0</span>
-      </div>
-
-      <div class="hudItem">
-        COMBO
-        <span id="combo">0</span>
-      </div>
-
-      <div class="hudItem">
-        残り
-        <span id="timeLeft">60</span>
-      </div>
-
-    </div>
-
-    <canvas id="gameCanvas"></canvas>
-
-    <div id="danceTime">
-      DANCE TIME
-    </div>
-
-    <div id="judgeText"></div>
-
-    <div class="controls">
-
-      <button class="tapBtn" data-lane="0">←</button>
-      <button class="tapBtn" data-lane="1">↓</button>
-      <button class="tapBtn" data-lane="2">↑</button>
-      <button class="tapBtn" data-lane="3">→</button>
-
-    </div>
-
-  </section>
-
-  <!-- 結果 -->
-
-  <section id="resultScreen" class="screen">
-
-    <div class="resultBox">
-
-      <canvas id="resultCanvas"></canvas>
-
-      <h2 id="rankText">
-        イビツなダンス
-      </h2>
-
-      <div id="rankStars">
-        ★★★
-      </div>
-
-      <div class="finalScore">
-        SCORE
-        <span id="finalScore">0</span>
-      </div>
-
-      <div class="resultButtons">
-
-        <button id="shareBtn">
-          Xでシェア
-        </button>
-
-        <button id="retryBtn">
-          もう1回遊ぶ
-        </button>
-
-        <button id="homeBtn">
-          カバゲーセンへ
-        </button>
-
-      </div>
-
-    </div>
-
-  </section>
-
+  <div class="resultButtons">
+    <button id="shareBtn">Xでシェア</button>
+    <button id="retryBtn">もう1回遊ぶ</button>
+    <button id="homeBtn">カバゲーセンへ</button>
+  </div>
 </div>
 
 <script src="game.js"></script>
-
 </body>
 </html>
