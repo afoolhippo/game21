@@ -236,19 +236,34 @@ function endGame(){
   let comment;
   let image;
 
-  if(score >= 25){
-    rank = "もう隠せない";
-    comment = "もう、見間違いでは済まされない。";
-    image = "ufo.png";
-  }else if(score >= 10){
-    rank = "たしかに見た";
-    comment = "夕暮れの空に、何かが飛んでいた。";
-    image = "hat.png";
-  }else{
-    rank = "気のせいだった";
-    comment = "帽子やメロンパンばかり追っていた。";
-    image = "melon.png";
-  }
+if(score >= 90){
+
+  rank = "もう隠せない";
+
+  comment =
+    "もう、見間違いでは済まされない。";
+
+  image = "ufo.png";
+
+}else if(score >= 40){
+
+  rank = "たしかに見た";
+
+  comment =
+    "夕暮れの空に、何かが飛んでいた。";
+
+  image = "hat.png";
+
+}else{
+
+  rank = "気のせいだった";
+
+  comment =
+    "帽子やメロンパンばかり追っていた。";
+
+  image = "melon.png";
+
+}
 
   rankText.textContent = rank;
   scoreResult.textContent = `SCORE ${score}`;
