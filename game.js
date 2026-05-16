@@ -196,22 +196,31 @@ canvas.addEventListener("pointerdown", e=>{
     const dist = Math.sqrt(dx * dx + dy * dy);
 
     if(dist < obj.size * 0.5){
-      if(obj.type === "ufo"){
-        score++;
-        seGood.currentTime = 0;
-        seGood.play().catch(()=>{});
-      }else if(obj.type === "melon"){
-        score--;
-        seBad.currentTime = 0;
-        seBad.play().catch(()=>{});
+if(obj.type === "ufo"){
 
-        melonSe.currentTime = 0;
-        melonSe.play().catch(()=>{});
-      }else{
-        score--;
-        seBad.currentTime = 0;
-        seBad.play().catch(()=>{});
-      }
+  score += 3;
+
+  seGood.currentTime = 0;
+  seGood.play().catch(()=>{});
+
+}else if(obj.type === "melon"){
+
+  score -= 1;
+
+  seBad.currentTime = 0;
+  seBad.play().catch(()=>{});
+
+  melonSe.currentTime = 0;
+  melonSe.play().catch(()=>{});
+
+}else{
+
+  score -= 1;
+
+  seBad.currentTime = 0;
+  seBad.play().catch(()=>{});
+
+}
 
       scoreEl.textContent = score;
       objects.splice(i,1);
