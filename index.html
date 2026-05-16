@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>UFOを見た！</title>
+
+  <link rel="stylesheet" href="style.css">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+  <link href="https://fonts.googleapis.com/css2?family=DotGothic16&display=swap" rel="stylesheet">
+</head>
+
+<body>
+
+<div id="titleScreen" class="screen active">
+
+  <img id="titleImage" src="title.png">
+
+</div>
+
+<div id="gameScreen" class="screen">
+
+  <canvas id="gameCanvas"></canvas>
+
+  <div id="ui">
+    <div>SCORE <span id="score">0</span></div>
+    <div>TIME <span id="time">30</span></div>
+  </div>
+
+  <button id="toTitleBtn">
+    タイトルへ
+  </button>
+
+</div>
+
+<div id="resultScreen" class="screen">
+
+  <div id="rankText"></div>
+
+  <img id="resultImage">
+
+  <div id="scoreResult"></div>
+
+  <div id="commentText"></div>
+
+  <div class="resultButtons">
+
+    <button id="shareBtn">
+      Xでシェア
+    </button>
+
+    <button id="retryBtn">
+      タイトルへ
+    </button>
+
+    <button id="homeBtn">
+      カバゲーセンへ
+    </button>
+
+  </div>
+
+</div>
+
+<script src="game.js"></script>
+
+</body>
+</html>
