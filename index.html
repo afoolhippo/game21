@@ -9,62 +9,46 @@
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-
   <link href="https://fonts.googleapis.com/css2?family=DotGothic16&display=swap" rel="stylesheet">
 </head>
 
 <body>
 
 <div id="titleScreen" class="screen active">
-
   <img id="titleImage" src="title.png">
 
+  <div id="ruleText">
+    UFOをタップ！<br>
+    帽子とメロンパンはタップするな！
+  </div>
+
+  <button id="startBtn">タップしてスタート</button>
 </div>
 
 <div id="gameScreen" class="screen">
-
   <canvas id="gameCanvas"></canvas>
 
   <div id="ui">
-    <div>SCORE <span id="score">0</span></div>
-    <div>TIME <span id="time">30</span></div>
+    <span>SCORE <span id="score">0</span></span>
+    <span>TIME <span id="time">30</span></span>
   </div>
 
-  <button id="toTitleBtn">
-    タイトルへ
-  </button>
-
+  <button id="toTitleBtn">タイトルへ</button>
 </div>
 
 <div id="resultScreen" class="screen">
-
   <div id="rankText"></div>
-
   <img id="resultImage">
-
   <div id="scoreResult"></div>
-
   <div id="commentText"></div>
 
   <div class="resultButtons">
-
-    <button id="shareBtn">
-      Xでシェア
-    </button>
-
-    <button id="retryBtn">
-      タイトルへ
-    </button>
-
-    <button id="homeBtn">
-      カバゲーセンへ
-    </button>
-
+    <button id="shareBtn">Xでシェア</button>
+    <button id="retryBtn">もう1回遊ぶ</button>
+    <button id="homeBtn">カバゲーセンへ</button>
   </div>
-
 </div>
 
 <script src="game.js"></script>
-
 </body>
 </html>
